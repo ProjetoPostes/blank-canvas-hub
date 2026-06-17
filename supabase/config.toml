@@ -1,0 +1,4 @@
+project_id = "dyxhlwqlgmjqavlvtuzu"
+
+[functions.chat-cumulo]
+verify_jwt = false
