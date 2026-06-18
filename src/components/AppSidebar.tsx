@@ -99,11 +99,6 @@ export function AppSidebar() {
       icon: Upload,
     },
     {
-      title: "Base 5311",
-      url: "/tratativas/base-5311",
-      icon: Star,
-    },
-    {
       title: "Logs de Auditoria",
       url: "/tratativas/audit-logs",
       icon: History,
