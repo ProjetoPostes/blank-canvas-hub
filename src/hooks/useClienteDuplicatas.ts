@@ -10,25 +10,20 @@ interface ClienteDuplicatas {
 
 export function useClienteDuplicatas(
   numcpf: string | null | undefined,
-  currentNumos: number | null | undefined
+  currentNumos: number | null | undefined,
 ): ClienteDuplicatas {
   const { data, isLoading } = useQuery({
     queryKey: ["cliente-duplicatas", numcpf, currentNumos],
     queryFn: async () => {
-      // Use RPC to search by decrypted CPF
-      const { data, error } = await supabase
-        .rpc("find_cliente_duplicatas", {
-          p_numcpf: numcpf!,
-          p_current_numos: currentNumos!,
-        });
-
+      const { data, error } = await supabase.rpc("find_cliente_duplicatas", {
+        p_cpf: numcpf!,
+        p_current_num_os: currentNumos!,
+      });
       if (error) throw error;
-
       const result = data as unknown as {
         despachoOS: number[];
         cadernoOS: number[];
       };
-
       return {
         despachoOS: result?.despachoOS ?? [],
         cadernoOS: result?.cadernoOS ?? [],
@@ -42,8 +37,7 @@ export function useClienteDuplicatas(
     despachoOS: data?.despachoOS ?? [],
     cadernoOS: data?.cadernoOS ?? [],
     hasDuplicatas:
-      (data?.despachoOS?.length ?? 0) > 0 ||
-      (data?.cadernoOS?.length ?? 0) > 0,
+      (data?.despachoOS?.length ?? 0) > 0 || (data?.cadernoOS?.length ?? 0) > 0,
     isLoading,
   };
 }

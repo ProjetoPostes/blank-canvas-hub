@@ -1,8 +1,13 @@
-// Database types for Supabase tables
-export type AppRole = 'admin' | 'operador_chefe' | 'operador' | 'consultor';
+// Application-facing shapes. The Caderno/Despacho interfaces match exactly
+// what the RPCs get_caderno_full / get_despacho_full return — with legacy
+// aliases (numos, nomecli, numcpf, nomelcd, ...) — so most UI code keeps
+// working without rewrites. The `id` field is the underlying UUID PK
+// (id_os / id_despacho); mutations target the real column.
+
+export type AppRole = "admin" | "operador_chefe" | "operador" | "consultor";
 
 export interface Despacho {
-  id: string;
+  id: string; // id_despacho UUID
   numos: number;
   dias_para_despacho: number | null;
   inconsistencia: number | null;
@@ -31,9 +36,9 @@ export interface Despacho {
 }
 
 export interface Caderno {
-  id: string;
+  id: string; // id_os UUID
   numos: number;
-  numobra: number | null;
+  numobra: string | null;
   status: string | null;
   nomelcd: string | null;
   regional: string | null;
@@ -49,6 +54,7 @@ export interface Caderno {
   complemento: string | null;
   dsclgr_os: string | null;
   datasol: string | null;
+  // Legacy fields kept nullable; not present in the new schema, always null.
   datacontab: string | null;
   data_766: string | null;
   dataprev: string | null;
@@ -80,14 +86,18 @@ export interface Demanda {
   id: string;
   titulo: string;
   descricao: string | null;
+  // `tipo` was removed from the schema but kept here for back-compat in UI;
+  // it always mirrors tipo_demanda.
   tipo: string;
-  tipo_demanda: string | null;
+  tipo_demanda: string;
   tipo_carta: string | null;
   prioridade: string | null;
   status: string | null;
   prazo_execucao: string | null;
   operador_id: string | null;
   criado_por: string;
+  num_os?: number | null;
+  num_obra?: string | null;
   created_at: string;
   updated_at: string;
   deleted_at: string | null;
@@ -114,30 +124,11 @@ export interface Profile {
 
 export interface DocumentoCarta {
   id: string;
-  nome: string;
+  titulo: string;
   descricao: string | null;
-  categoria: string;
   url: string;
-  criado_por: string;
-  created_at: string;
-  updated_at: string;
-}
-
-export interface Base5311 {
-  id: string;
-  controle: number | null;
-  identificacao: string | null;
-  alocacao: string | null;
-  tranche: string | null;
-  nome: string | null;
-  cpf: string | null;
-  cpf_corrigido: string | null;
-  criterios: string | null;
-  endereco: string | null;
-  municipio: string | null;
-  polo: string | null;
-  regional: string | null;
-  obra: string | null;
+  storage_path: string | null;
+  uploaded_by: string | null;
   created_at: string;
   updated_at: string;
 }

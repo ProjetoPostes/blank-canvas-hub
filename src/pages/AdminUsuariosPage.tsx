@@ -12,7 +12,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Loader2, Shield, UserPlus, ShieldCheck } from "lucide-react";
 import { toast } from "sonner";
 import { AppRole } from "@/types/database";
-import { SecurityHealthPanel } from "@/components/SecurityHealthPanel";
+
 
 interface UserWithRole {
   id: string;
@@ -226,7 +226,14 @@ export default function AdminUsuariosPage() {
           </TabsContent>
 
           <TabsContent value="seguranca">
-            <SecurityHealthPanel />
+            <Card>
+              <CardHeader>
+                <CardTitle>Segurança</CardTitle>
+                <CardDescription>
+                  Verificações de segurança são feitas no nível do banco (RLS + has_role).
+                </CardDescription>
+              </CardHeader>
+            </Card>
           </TabsContent>
         </Tabs>
       </div>

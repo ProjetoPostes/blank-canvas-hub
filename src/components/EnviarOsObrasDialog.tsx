@@ -18,7 +18,7 @@ import { readExcelFile } from "@/lib/excelUtils";
 interface EnviarOsObrasDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  selectedItems: Array<{ numos: number; numobra?: number | null; nomecli?: string | null }>;
+  selectedItems: Array<{ numos: number; numobra?: string | number | null; nomecli?: string | null }>;
   onClearSelection: () => void;
 }
 

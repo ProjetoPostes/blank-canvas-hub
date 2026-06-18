@@ -10,7 +10,7 @@ const ALLOWED_ROUTE_PREFIXES = [
   "/pending-approval",
   "/tratativas",
   "/consulta",
-  "/chat",
+  
 ] as const;
 
 /**

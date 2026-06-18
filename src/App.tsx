@@ -23,10 +23,8 @@ import AdminUsuariosPage from "./pages/AdminUsuariosPage";
 import ClientesPage from "./pages/ClientesPage";
 import ImportacaoPage from "./pages/ImportacaoPage";
 import AuditLogsPage from "./pages/AuditLogsPage";
-import Base5311Page from "./pages/Base5311Page";
 import PendingApprovalPage from "./pages/PendingApprovalPage";
 import UserApprovalPage from "./pages/UserApprovalPage";
-import ChatPage from "./pages/ChatPage";
 // Consulta pages (read-only views from MainHub)
 import DespachoConsulta from "./pages/consulta/DespachoConsulta";
 import CadernoConsulta from "./pages/consulta/CadernoConsulta";
@@ -156,14 +154,6 @@ const App = () => (
                   }
                 />
                 <Route
-                  path="base-5311"
-                  element={
-                    <RoleProtectedRoute allowedRoles={["admin"]}>
-                      <Base5311Page />
-                    </RoleProtectedRoute>
-                  }
-                />
-                <Route
                   path="audit-logs"
                   element={
                     <RoleProtectedRoute allowedRoles={["admin"]}>
@@ -233,17 +223,6 @@ const App = () => (
                 }
               />
 
-              {/* Chat Route - Independent from Tratativas (no consultor access) */}
-              <Route
-                path="/chat"
-                element={
-                  <ProtectedRoute>
-                    <RoleProtectedRoute allowedRoles={["admin", "operador_chefe", "operador"]}>
-                      <ChatPage />
-                    </RoleProtectedRoute>
-                  </ProtectedRoute>
-                }
-              />
 
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
               <Route path="*" element={<NotFound />} />

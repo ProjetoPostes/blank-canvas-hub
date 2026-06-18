@@ -21,7 +21,7 @@ import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { Label } from "@/components/ui/label";
 import { createNotification } from "@/hooks/useNotifications";
-import { validateOperadorAssignment } from "@/hooks/useSecurityRpc";
+
 import { toast } from "sonner";
 
 const formSchema = z.object({
@@ -81,14 +81,7 @@ export default function GestaoDemandasPage() {
   const tipoDemandaWatch = form.watch("tipo_demanda");
 
   const onSubmit = async (data: FormData) => {
-    // Validar operador_id se fornecido (mitigação IDOR)
-    if (data.operador_id) {
-      const validation = await validateOperadorAssignment(data.operador_id);
-      if (!validation.valid) {
-        toast.error(validation.error || "Operador inválido");
-        return;
-      }
-    }
+
 
     if (editingDemanda) {
       updateDemanda({

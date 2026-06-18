@@ -160,9 +160,6 @@ export default function MainHub() {
     navigate("/tratativas");
   };
 
-  const goToChat = () => {
-    navigate("/chat");
-  };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-accent/10 to-primary/5 flex flex-col">
@@ -182,24 +179,6 @@ export default function MainHub() {
           </div>
           <div className="flex items-center gap-4">
             <TooltipProvider>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Button
-                    variant="outline"
-                    onClick={goToChat}
-                    className="gap-2"
-                    disabled={!canAccessChat}
-                  >
-                    <MessageCircle className="h-4 w-4" />
-                    Chat
-                  </Button>
-                </TooltipTrigger>
-                {!canAccessChat && (
-                  <TooltipContent>
-                    <p>Este recurso é exclusivo para operadores, supervisores e administradores</p>
-                  </TooltipContent>
-                )}
-              </Tooltip>
 
               <Tooltip>
                 <TooltipTrigger asChild>

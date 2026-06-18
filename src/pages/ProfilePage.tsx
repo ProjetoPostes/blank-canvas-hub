@@ -12,7 +12,7 @@ import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Loader2, User, Mail } from "lucide-react";
-import { MfaSettings } from "@/components/MfaSettings";
+
 
 const formSchema = z.object({
   full_name: z.string().min(2, "Nome deve ter pelo menos 2 caracteres"),
@@ -91,7 +91,7 @@ export default function ProfilePage() {
         </CardContent>
       </Card>
 
-      <MfaSettings />
+      
     </div>
   );
 }

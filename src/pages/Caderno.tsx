@@ -42,7 +42,7 @@ import { Caderno as CadernoDBType } from "@/types/database";
 
 const formSchema = z.object({
   numos: z.number(),
-  numobra: z.number().nullable(),
+  numobra: z.string().nullable(),
   status: z.string().nullable(),
   nomelcd: z.string().nullable(),
   regional: z.string().nullable(),

@@ -24,7 +24,7 @@ interface Cliente {
   email: string | null;
   telefone: string | null;
   regional: string | null;
-  osCaderno: Array<{ numos: number; numobra: number | null; status: string | null; controle_os: string | null }>;
+  osCaderno: Array<{ numos: number; numobra: string | null; status: string | null; controle_os: string | null }>;
   osDespacho: Array<{ numos: number; tratativa: string | null; dias_para_despacho: number | null }>;
 }
 
