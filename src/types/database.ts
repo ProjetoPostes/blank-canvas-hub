@@ -115,6 +115,9 @@ export interface Demanda {
   status: string | null;
   tipo_carta: string | null;
   tipo_demanda: string;
+  /** Legacy alias for `tipo_demanda`. Populated on read for UI back-compat;
+   * stripped before writing back to the database. */
+  tipo?: string;
   titulo: string;
   updated_at: string;
 }
