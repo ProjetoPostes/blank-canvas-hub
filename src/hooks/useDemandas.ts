@@ -8,8 +8,8 @@ import { softDelete } from "./useSecurityRpc";
 
 export type CreateDemandaInput = Omit<
   Demanda,
-  "id" | "created_at" | "updated_at" | "criado_por" | "deleted_at" | "deleted_by"
->;
+  "id" | "created_at" | "updated_at" | "criado_por" | "deleted_at" | "deleted_by" | "num_obra" | "num_os"
+> & { num_obra?: string | null; num_os?: number | null };
 
 export const TIPOS_DEMANDA = ["Envio de carta", "Análise"];
 export const TIPOS_CARTA = [

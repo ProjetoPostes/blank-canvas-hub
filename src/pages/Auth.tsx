@@ -156,53 +156,32 @@ export default function Auth() {
     setIsSubmitting(true);
     
     try {
-      const sanitizedUsername = sanitizeInput(data.username.trim());
-      
-      const response = await supabase.functions.invoke("auth-login", {
-        body: {
-          username: sanitizedUsername,
-          password: data.password,
-          captchaToken: captchaToken,
-        },
+      const sanitizedUsername = sanitizeInput(data.username.trim()).toLowerCase();
+      const email = `${sanitizedUsername}@app.local`;
+
+      const { data: authData, error } = await supabase.auth.signInWithPassword({
+        email,
+        password: data.password,
       });
 
-      if (response.error) {
+      if (error) {
         resetCaptcha();
-        toast.error("Erro de conexão", {
-          description: "Não foi possível conectar ao servidor. Verifique sua internet.",
-        });
-        return;
-      }
-
-      if (response.data?.error) {
-        resetCaptcha();
-        const errorMessage = getLoginErrorMessage(response.data.error);
         toast.error("Falha no login", {
-          description: errorMessage,
+          description: getLoginErrorMessage(error.message) || "Usuário ou senha incorretos.",
         });
         return;
       }
 
-      if (response.data?.session) {
-        await supabase.auth.setSession({
-          access_token: response.data.session.access_token,
-          refresh_token: response.data.session.refresh_token,
-        });
-
+      if (authData?.session) {
         const targetPath = data.enterTratativas ? "/tratativas" : "/";
-        
-        // Reset login attempts on successful auth
         setLoginAttempts(0);
         resetCaptcha();
-        
         toast.success("Login realizado com sucesso!");
         navigate(targetPath);
       }
     } catch (error) {
       resetCaptcha();
-      if (import.meta.env.DEV) {
-        console.error("Login error:", error);
-      }
+      if (import.meta.env.DEV) console.error("Login error:", error);
       toast.error("Erro inesperado", {
         description: "Ocorreu um erro ao fazer login. Tente novamente.",
       });
