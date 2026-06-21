@@ -218,50 +218,41 @@ export default function Auth() {
     setIsSubmitting(true);
     
     try {
-      const sanitizedUsername = sanitizeInput(data.username.trim());
+      const sanitizedUsername = sanitizeInput(data.username.trim()).toLowerCase();
       const sanitizedFullName = sanitizeInput(data.fullName.trim());
-      
-      const response = await supabase.functions.invoke("auth-register", {
-        body: {
-          username: sanitizedUsername,
-          password: data.password,
-          fullName: sanitizedFullName,
-          captchaToken: signupCaptchaToken,
+      const email = `${sanitizedUsername}@app.local`;
+
+      const { data: authData, error } = await supabase.auth.signUp({
+        email,
+        password: data.password,
+        options: {
+          emailRedirectTo: `${window.location.origin}/`,
+          data: {
+            username: sanitizedUsername,
+            full_name: sanitizedFullName,
+          },
         },
       });
 
-      if (response.error) {
+      if (error) {
         setSignupCaptchaToken(null);
         signupCaptchaRef.current?.resetCaptcha();
-        toast.error("Erro de conexão", {
-          description: "Não foi possível conectar ao servidor. Verifique sua internet.",
-        });
-        return;
-      }
-
-      if (response.data?.error) {
-        setSignupCaptchaToken(null);
-        signupCaptchaRef.current?.resetCaptcha();
-        const errorMessage = getSignupErrorMessage(response.data.error);
         toast.error("Falha no cadastro", {
-          description: errorMessage,
+          description: getSignupErrorMessage(error.message) || error.message,
         });
         return;
       }
 
-      if (response.data?.session) {
-        await supabase.auth.setSession({
-          access_token: response.data.session.access_token,
-          refresh_token: response.data.session.refresh_token,
-        });
-        
+      if (authData?.session) {
         toast.success("Conta criada com sucesso!");
         navigate("/");
+      } else {
+        toast.success("Conta criada!", {
+          description: "Faça login para continuar.",
+        });
       }
     } catch (error) {
-      if (import.meta.env.DEV) {
-        console.error("Signup error:", error);
-      }
+      if (import.meta.env.DEV) console.error("Signup error:", error);
       toast.error("Erro inesperado", {
         description: "Ocorreu um erro ao criar a conta. Tente novamente.",
       });
