@@ -25,6 +25,10 @@ import ImportacaoPage from "./pages/ImportacaoPage";
 import AuditLogsPage from "./pages/AuditLogsPage";
 import PendingApprovalPage from "./pages/PendingApprovalPage";
 import UserApprovalPage from "./pages/UserApprovalPage";
+import ObrasPage from "./pages/ObrasPage";
+import LocalidadesPage from "./pages/LocalidadesPage";
+import PrioritariosPage from "./pages/PrioritariosPage";
+import HistoricoOsPage from "./pages/HistoricoOsPage";
 // Consulta pages (read-only views from MainHub)
 import DespachoConsulta from "./pages/consulta/DespachoConsulta";
 import CadernoConsulta from "./pages/consulta/CadernoConsulta";
