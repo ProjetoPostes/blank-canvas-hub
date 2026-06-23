@@ -124,6 +124,46 @@ const App = () => (
                     </RoleProtectedRoute>
                   }
                 />
+                <Route
+                  path="obras"
+                  element={
+                    <RoleProtectedRoute allowedRoles={["admin", "operador_chefe", "operador", "consultor"]}>
+                      <ObrasPage />
+                    </RoleProtectedRoute>
+                  }
+                />
+                <Route
+                  path="localidades"
+                  element={
+                    <RoleProtectedRoute allowedRoles={["admin", "operador_chefe", "operador", "consultor"]}>
+                      <LocalidadesPage />
+                    </RoleProtectedRoute>
+                  }
+                />
+                <Route
+                  path="prioritarios"
+                  element={
+                    <RoleProtectedRoute allowedRoles={["admin", "operador_chefe", "operador", "consultor"]}>
+                      <PrioritariosPage />
+                    </RoleProtectedRoute>
+                  }
+                />
+                <Route
+                  path="documentos-cartas"
+                  element={
+                    <RoleProtectedRoute allowedRoles={["admin", "operador_chefe", "operador", "consultor"]}>
+                      <DocumentosCartas />
+                    </RoleProtectedRoute>
+                  }
+                />
+                <Route
+                  path="historico-os"
+                  element={
+                    <RoleProtectedRoute allowedRoles={["admin", "operador_chefe", "operador", "consultor"]}>
+                      <HistoricoOsPage />
+                    </RoleProtectedRoute>
+                  }
+                />
                 <Route path="perfil" element={<ProfilePage />} />
                 <Route
                   path="gestao-demandas"
