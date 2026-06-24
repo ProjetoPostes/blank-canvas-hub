@@ -1,91 +1,107 @@
-## Objetivo
+# Operational Tables Upgrade — Obras, Localidades, Prioritários, Histórico OS
 
-Adaptar o codebase ao novo schema normalizado (snake_case, cliente/obra/localidade como FK, sem criptografia, sem chat/MFA/base5311/RPCs antigas) já aplicado no Supabase externo `iizfjjxfjpzfmylecfwj`.
+Goal: make the operational tables fast, navigable, and editable. Reuse `SimpleTablePage` as the visual base but add real server-side paging/sort/filter, a detail drawer, and create/edit dialogs with validation.
 
-## 1. Infraestrutura Supabase
+## Scope
 
-- Regenerar `src/integrations/supabase/types.ts` manualmente com o schema novo (cliente, obra, localidade, profiles, user_roles, caderno, despacho, demandas, prioritario, historico_os, documentos_cartas, notifications, audit_logs, masked_audit_logs + RPCs `has_role`, `soft_delete_record`, `check_security_health`, `find_cliente_duplicatas`, `is_in_prioritario`, `list_operadores`, `log_audit_action`, `get_caderno_full`, `get_despacho_full`).
-- Reescrever `src/types/database.ts` para refletir o shape retornado pelas RPCs `get_caderno_full` / `get_despacho_full` (campos achatados com aliases legados: `numos`, `nomecli`, `numcpf`, etc.) para minimizar mudanças nas páginas.
+In scope:
+- Pages: `ObrasPage`, `LocalidadesPage`, `PrioritariosPage`, `HistoricoOsPage`
+- Homepage cards (MainHub) → cap to small preview (top N) so they stay fast
+- New shared components: detail drawer + form dialogs
+- Hooks in `useTabelasOperacionais.ts` → switch to paged queries + mutations
 
-## 2. Remover features mortas
+Out of scope:
+- Histórico OS: read-only (no create/edit dialog — it's an audit trail). Detail drawer + filters/sort only.
+- Caderno/Despacho/Demandas/Documentos: untouched (already have their own UIs).
+- Schema changes / new RPCs.
 
-Deletar arquivos:
+## What gets built
 
-```text
-src/components/chat/*                     (toda a pasta)
-src/components/MfaEnrollDialog.tsx
-src/components/MfaEnrollRequiredDialog.tsx
-src/components/MfaRequirementsSettings.tsx
-src/components/MfaSettings.tsx
-src/components/MfaVerifyDialog.tsx
-src/hooks/useChat.ts
-src/hooks/useChatUsers.ts
-src/hooks/useMfa.ts
-src/hooks/useMfaRequirements.ts
-src/hooks/useBase5311.ts
-src/pages/ChatPage.tsx
-src/pages/Base5311Page.tsx
-src/types/chat.ts
-supabase/functions/chat-cumulo/
-supabase/functions/auth-login/
-supabase/functions/auth-register/
-supabase/functions/reset-user-password/
+### 1. Shared infra
+
+`src/components/tables/RowDetailDrawer.tsx`
+- Right-side `Sheet` showing key/value list for one row
+- Slots: title, primary fields, secondary fields, action buttons (Edit, Delete, Close)
+
+`src/components/tables/EntityFormDialog.tsx`
+- Generic `Dialog` wrapping `react-hook-form` + `zod`
+- Receives schema, default values, submit handler; shared submit/cancel footer
+
+Extend `SimpleTablePage`:
+- Per-column `sortable?: boolean` + `accessor` and `filter?: { type: 'text'|'select', options? }`
+- Header click toggles sort (asc/desc/none) — single-column sort
+- Column filter row beneath header
+- `onRowClick` opens detail drawer
+- `totalRows` + `serverPaginated` flags so paging reads from the hook, not `rows.length`
+- Add a "Novo" button slot in the header area
+
+### 2. Hooks (server-side)
+
+Refactor `src/hooks/useTabelasOperacionais.ts`:
+
+Each list hook becomes paged:
+```ts
+useObras({ page, pageSize, sort, search, filters })
+  → { data: Obra[], total: number, isLoading }
 ```
+Implementation uses Supabase `.range((page-1)*size, page*size-1)` + `.order(sortField, { ascending })` + `.ilike(...)` per filter, with `{ count: 'exact' }`.
 
-Manter `UserApprovalPage` e `usePendingApprovals` adaptados: "pendente" = usuário em `profiles` sem nenhuma linha em `user_roles`. Aprovar = inserir role.
+Add mutation hooks:
+- `useCreateObra`, `useUpdateObra`, `useDeleteObra` (soft delete → `deleted_at = now()`)
+- Same trio for `Localidade` and `Prioritario`
+- Histórico OS: no mutations
 
-## 3. Adaptar hooks (substituir RPCs antigas)
+All mutations:
+- Validate with zod schema (shared between hook and dialog)
+- Optimistic update via `queryClient.setQueryData` on the active page key; rollback on error; final `invalidateQueries`
+- Toast success/error
 
-- `useSecurityRpc.ts` → remover `validateAccess`, `secureDelete`, `validateOperadorAssignment` (não existem mais). Manter só `softDelete` e `checkSecurityHealth`.
-- `useDespacho.ts` → remover toda chamada a `validateAccess` e `secureDelete`; usar `get_despacho_full` para leitura; UPDATE direto em `despacho` por `id_despacho`; importação Excel grava via upsert em `cliente` (por CPF) + insert em `despacho` ligando `id_cliente`.
-- `useCaderno.ts` → análogo, com `get_caderno_full`, upsert `cliente`/`obra`/`localidade`, insert `caderno`.
-- `useClienteDuplicatas.ts` → trocar parâmetro `p_numcpf` → `p_cpf` e `p_current_numos` → `p_current_num_os` (RPC `find_cliente_duplicatas`).
-- `useDemandas.ts` → remover campo `tipo` (só `tipo_demanda`).
-- `useDocumentosCartas.ts` → renomear `nome`→`titulo`, `criado_por`→`uploaded_by`, remover `categoria`.
-- `useUserRole.ts` → enum continua igual, ok.
-- `useNotifications.ts`, `useProfile.ts`, `useOperadores.ts`, `usePendingApprovals.ts`, `useCadernoStats.ts`, `useDespachoStats.ts` → revisar nomes de colunas.
+### 3. Entity wiring
 
-## 4. Adaptar páginas
+For each of Obras / Localidades / Prioritários page:
+- Replace client `useMemo` filter+slice with the new paged hook
+- Define column meta (sortable, filter type)
+- Define zod schema (e.g. Obra: `num_obra` required string, `status` enum-ish text, `sigco` optional int)
+- Detail drawer config (which fields render where)
+- "Novo" button → opens EntityFormDialog in create mode
+- Row click → opens drawer; drawer "Editar" → opens dialog in edit mode; "Excluir" → confirm + soft delete
 
-`Despacho.tsx`, `Caderno.tsx`, `consulta/DespachoConsulta.tsx`, `consulta/CadernoConsulta.tsx`, `ClientesPage.tsx`, `consulta/ClientesConsulta.tsx`, `GestaoDemandasPage.tsx`, `MinhasDemandasPage.tsx`, `Painel.tsx`, `PainelCaderno.tsx`, `ImportacaoPage.tsx`, `AdminUsuariosPage.tsx`, `AuditLogsPage.tsx`, `consulta/DocumentosCartas.tsx`, `consulta/RelatorioCartasDashboard.tsx`, `UserApprovalPage.tsx`, `ProfilePage.tsx`, `Auth.tsx`, `MainHub.tsx`.
+Histórico OS:
+- Server-side paging + sort by `created_at`
+- Filters: `num_os` (text), `campo` (text), date range (optional — text input ok for v1)
+- Row click → drawer with full before/after values; no edit/delete
 
-Como o shape retornado pelas RPCs `get_*_full` usa os aliases antigos (`numos`, `nomecli`, etc.), a maior parte das páginas pode permanecer quase igual — só ajustar:
-- `id` → `id_despacho` / `id_os` ao chamar mutations.
-- Remover referências a colunas mortas (`datacontab`, `data_766`, `dth_envio_dineng`, `dth_retorno_dineng`, `dth_impedimento`, `data_recebimento` em `caderno`; `dth_nascimento` continua via cliente).
-- Remover toda referência a `base_5311` enquanto tabela (campo virou TEXT em `caderno`; usar `in_base_5311` calculado).
-- Remover botões/menus de Chat, MFA, Base5311.
+### 4. MainHub preview cards
 
-## 5. Limpar rotas e sidebar
+The homepage already renders summary cards. Update to fetch only `pageSize: 5` from the same hooks (cheap), so the homepage stays fast regardless of table size. Each card links to the full `/consulta/...` page.
 
-- `src/routes/*`, `src/router.tsx`, `src/App.tsx`, `src/components/AppSidebar.tsx`, `src/components/UserMenu.tsx`, `src/components/AppLayout.tsx`, `src/components/SecurityHealthPanel.tsx` → remover links/rotas de Chat, MFA, Base5311.
-- `routeTree.gen.ts` → regenerar (ou manter manual).
+## Technical details
 
-## 6. Auth
+- Validation: `zod` (already used in project)
+- Forms: `react-hook-form` + `@hookform/resolvers/zod` + existing shadcn `Form` primitives
+- Sorting state lives in the page component; passed into hook → translated to `.order()`
+- Column filters are debounced (300ms) before triggering refetch
+- Soft delete pattern matches existing Caderno/Despacho hooks (`deleted_at`, `deleted_by`)
+- Permissions: create/edit/delete buttons gated by `useUserRole` — visible only to `admin` / `operador_chefe`, consistent with current app
+- Localidade has no `deleted_at` column → hard delete with confirm
+- Prioritario has no `deleted_at` either → hard delete with confirm
 
-- `src/contexts/AuthContext.tsx`, `src/pages/Auth.tsx` → manter login/cadastro nativo do Supabase (email/senha). Sem MFA. Trigger `handle_new_user` já cria profile no banco automaticamente.
+## File changes
 
-## 7. Limpeza
+Created:
+- `src/components/tables/RowDetailDrawer.tsx`
+- `src/components/tables/EntityFormDialog.tsx`
+- `src/lib/schemas/operacionais.ts` (zod schemas for obra/localidade/prioritario)
 
-- Apagar `src/data/mockData.ts` se só era usado por features removidas.
-- Apagar `docs/supabase-schema.sql` antigo e substituir pelo SQL novo.
-- Apagar `src/components/SecurityHealthPanel.tsx` ou mantê-lo simplificado (só `check_security_health`).
+Edited:
+- `src/components/tables/SimpleTablePage.tsx` (sort/filter/row-click/total/new-button)
+- `src/hooks/useTabelasOperacionais.ts` (paged queries + mutations)
+- `src/pages/ObrasPage.tsx`
+- `src/pages/LocalidadesPage.tsx`
+- `src/pages/PrioritariosPage.tsx`
+- `src/pages/HistoricoOsPage.tsx`
+- `src/pages/MainHub.tsx` (cards use `pageSize: 5`)
 
-## 8. Validação
+## Open question
 
-- Build limpo (`tsc` sem erros).
-- Login → Hub → Despacho → Caderno carregam sem erro de rede/RLS.
-- Importação Excel insere em `cliente` + `despacho` corretamente.
-
-## Detalhes técnicos relevantes
-
-- `caderno.id_os` é UUID PK; `caderno.num_os` é BIGINT UNIQUE — pra UI usar `num_os` como número visível.
-- `despacho.id_despacho` é UUID PK; mesma lógica.
-- `cliente.telefone` é `TEXT[]`; RPC achata pegando `[1]` e `[2]`.
-- `documentos` bucket criado no storage; policies já aplicadas (read auth, write admin/operador_chefe).
-- `audit_logs` agora tem `id UUID` (antes era bigint) — `AuditLogsPage` deve tratar como string.
-
-## Escopo NÃO incluído (confirmar depois)
-
-- Reescrever as edge functions deletadas em novas funções (auth nativo do Supabase resolve login/cadastro/reset sem edge function).
-- Rebuild visual / mudanças de design.
-- Migrar dados antigos para o novo schema (assumindo banco vazio ou já populado fora).
+Histórico OS is left read-only (it's an audit log). Confirm that's what you want — otherwise I'll add manual create/edit too.
