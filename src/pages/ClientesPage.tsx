@@ -30,7 +30,7 @@ const ITEMS_PER_PAGE = 20;
 
 export default function ClientesPage() {
   const { data: cadernoData, isLoading: isLoadingCaderno } = useCaderno(1000);
-  const { data: despachoData, isLoading: isLoadingDespacho } = useDespacho(true);
+  const { data: despachoData, isLoading: isLoadingDespacho } = useDespacho(false);
   const [search, setSearch] = useState("");
   const [filterRegional, setFilterRegional] = useState<string>("all");
   const [currentPage, setCurrentPage] = useState(1);
