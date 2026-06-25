@@ -30,7 +30,7 @@ const ITEMS_PER_PAGE = 20;
 
 export default function ClientesPage() {
   const { data: cadernoData, isLoading: isLoadingCaderno } = useCaderno(1000);
-  const { data: despachoData, isLoading: isLoadingDespacho } = useDespacho(true);
+  const { data: despachoData, isLoading: isLoadingDespacho } = useDespacho(false);
   const [search, setSearch] = useState("");
   const [filterRegional, setFilterRegional] = useState<string>("all");
   const [currentPage, setCurrentPage] = useState(1);
@@ -166,29 +166,29 @@ export default function ClientesPage() {
         <div className="grid grid-cols-3 gap-4">
           <Card>
             <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium">Total de Clientes</CardTitle>
+              <CardTitle className="text-sm font-medium">Clientes (filtrados)</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{clientes.length}</div>
+              <div className="text-2xl font-bold">{filteredClientes.length}</div>
             </CardContent>
           </Card>
           <Card>
             <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium">Clientes no Caderno</CardTitle>
+              <CardTitle className="text-sm font-medium">Com OS no Caderno</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold text-blue-600">
-                {clientes.filter((c) => c.osCaderno.length > 0).length}
+                {filteredClientes.filter((c) => c.osCaderno.length > 0).length}
               </div>
             </CardContent>
           </Card>
           <Card>
             <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium">Clientes no Despacho</CardTitle>
+              <CardTitle className="text-sm font-medium">Com OS no Despacho (não concluído)</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold text-orange-600">
-                {clientes.filter((c) => c.osDespacho.length > 0).length}
+                {filteredClientes.filter((c) => c.osDespacho.length > 0).length}
               </div>
             </CardContent>
           </Card>
@@ -207,7 +207,7 @@ export default function ClientesPage() {
               <div className="relative flex-1 min-w-[250px]">
                 <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
                 <Input
-                  placeholder="Buscar por CPF, Nome ou E-mail..."
+                  placeholder="Buscar por CPF ou Nome..."
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
                   className="pl-8"
@@ -234,62 +234,51 @@ export default function ClientesPage() {
         {/* Table */}
         <Card>
           <CardContent className="p-0">
-            <Table>
+            <Table className="text-xs">
               <TableHeader>
                 <TableRow>
-                  <TableHead className="w-[50px]">Ações</TableHead>
-                  <TableHead>CPF</TableHead>
-                  <TableHead>Nome</TableHead>
-                  <TableHead>E-mail</TableHead>
-                  <TableHead>Telefone</TableHead>
-                  <TableHead>Regional</TableHead>
-                  <TableHead className="text-center">Base 5311</TableHead>
-                  <TableHead className="text-center">OS Caderno</TableHead>
-                  <TableHead className="text-center">OS Despacho</TableHead>
+                  <TableHead className="w-[50px] text-xs">Ações</TableHead>
+                  <TableHead className="text-xs">CPF</TableHead>
+                  <TableHead className="text-xs">Nome</TableHead>
+                  <TableHead className="text-xs text-center">OS Pendentes</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {paginatedClientes.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={9} className="text-center text-muted-foreground py-8">
+                    <TableCell colSpan={4} className="text-center text-muted-foreground py-8">
                       Nenhum cliente encontrado
                     </TableCell>
                   </TableRow>
                 ) : (
-                  paginatedClientes.map((cliente) => (
-                    <TableRow key={cliente.cpf}>
-                      <TableCell>
-                        <Button variant="ghost" size="icon" onClick={() => handleViewCliente(cliente)}>
-                          <Eye className="h-4 w-4" />
-                        </Button>
-                      </TableCell>
-                      <TableCell className="font-mono text-xs">{maskCpf(cliente.cpf)}</TableCell>
-                      <TableCell className="font-medium">{cliente.nome}</TableCell>
-                      <TableCell className="text-xs">{cliente.email ?? "-"}</TableCell>
-                      <TableCell className="text-xs">{cliente.telefone ?? "-"}</TableCell>
-                      <TableCell>{cliente.regional ?? "-"}</TableCell>
-                      <TableCell className="text-center">
-                        {cliente.inBase5311 ? (
-                          <Badge variant="destructive">SIM</Badge>
-                        ) : (
-                          <Badge variant="outline">NÃO</Badge>
-                        )}
-                      </TableCell>
-                      <TableCell className="text-center">
-                        <Badge variant={cliente.osCaderno.length > 0 ? "default" : "outline"}>
-                          {cliente.osCaderno.length}
-                        </Badge>
-                      </TableCell>
-                      <TableCell className="text-center">
-                        <Badge variant={cliente.osDespacho.length > 0 ? "secondary" : "outline"}>
-                          {cliente.osDespacho.length}
-                        </Badge>
-                      </TableCell>
-                    </TableRow>
-                  ))
+                  paginatedClientes.map((cliente) => {
+                    const totalPend = cliente.osCaderno.length + cliente.osDespacho.length;
+                    return (
+                      <TableRow
+                        key={cliente.cpf}
+                        className="cursor-pointer"
+                        onClick={() => handleViewCliente(cliente)}
+                      >
+                        <TableCell>
+                          <Button variant="ghost" size="icon" onClick={(e) => { e.stopPropagation(); handleViewCliente(cliente); }}>
+                            <Eye className="h-4 w-4" />
+                          </Button>
+                        </TableCell>
+                        <TableCell className="font-mono text-xs">{maskCpf(cliente.cpf)}</TableCell>
+                        <TableCell className="font-medium text-xs">{cliente.nome}</TableCell>
+                        <TableCell className="text-center">
+                          <Badge variant={totalPend > 0 ? "default" : "outline"} className="text-xs">
+                            {totalPend}
+                          </Badge>
+                        </TableCell>
+                      </TableRow>
+                    );
+                  })
                 )}
               </TableBody>
             </Table>
+
+
 
             {/* Pagination */}
             <div className="flex items-center justify-between px-4 py-3 border-t">

@@ -1,22 +1,26 @@
 import { useState } from "react";
 import { Star } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
 import { SimpleTablePage, type SortDir } from "@/components/tables/SimpleTablePage";
 import { RowDetailDrawer } from "@/components/tables/RowDetailDrawer";
-import { EntityFormDialog } from "@/components/tables/EntityFormDialog";
-import {
-  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
-  AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
-import { usePrioritarios, usePrioritarioMutations } from "@/hooks/useTabelasOperacionais";
-import { useUserRole } from "@/hooks/useUserRole";
-import { prioritarioSchema, type PrioritarioFormData } from "@/lib/schemas/operacionais";
+import { usePrioritarios } from "@/hooks/useTabelasOperacionais";
 import { maskCpf } from "@/lib/cpfMask";
 import type { Prioritario } from "@/types/database";
 
 const PAGE_SIZE = 20;
 
+// Extended row — DB has more columns than the typed schema reveals
+type PrioritarioRowExt = Prioritario & {
+  controle?: string | null;
+  tranche?: string | null;
+  identificacao?: string | null;
+  alocacao?: string | null;
+  check_po?: string | null;
+  criterio?: string | null;
+  motivo_impedimento?: string | null;
+};
+
 export default function PrioritariosPage({ standalone = false }: { standalone?: boolean }) {
-  const { canEdit } = useUserRole();
   const [search, setSearch] = useState("");
   const [filters, setFilters] = useState<Record<string, string>>({});
   const [sortField, setSortField] = useState("nome");
@@ -24,39 +28,37 @@ export default function PrioritariosPage({ standalone = false }: { standalone?: 
   const [page, setPage] = useState(1);
 
   const { data, isLoading } = usePrioritarios({ page, pageSize: PAGE_SIZE, search, sortField, sortDir, filters });
-  const { create, update, remove } = usePrioritarioMutations();
+  const rows = (data?.rows ?? []) as PrioritarioRowExt[];
+  const [selected, setSelected] = useState<PrioritarioRowExt | null>(null);
 
-  const [selected, setSelected] = useState<Prioritario | null>(null);
-  const [formOpen, setFormOpen] = useState(false);
-  const [editing, setEditing] = useState<Prioritario | null>(null);
-  const [deleteId, setDeleteId] = useState<string | null>(null);
-
-  const submit = async (values: PrioritarioFormData) => {
-    if (editing) await update.mutateAsync({ id: editing.id, ...values });
-    else await create.mutateAsync(values);
-    setFormOpen(false);
-    setEditing(null);
-  };
+  const cell = (v?: string | null) => <span className="text-xs">{v ?? "-"}</span>;
 
   return (
     <>
-      <SimpleTablePage<Prioritario>
+      <SimpleTablePage<PrioritarioRowExt>
         standalone={standalone}
         title="Prioritários"
         subtitle="Clientes prioritários"
         icon={<Star className="h-4 w-4" />}
         isLoading={isLoading}
-        rows={data?.rows ?? []}
+        rows={rows}
         total={data?.total ?? 0}
         page={page}
         pageSize={PAGE_SIZE}
         onPageChange={setPage}
         search={search}
         onSearchChange={(v) => { setSearch(v); setPage(1); }}
-        searchPlaceholder="Buscar por CPF, nome ou observação..."
+        searchPlaceholder="Buscar..."
         columnFilters={[
+          { field: "controle", label: "Controle" },
+          { field: "tranche", label: "Tranche" },
+          { field: "identificacao", label: "Identificação" },
+          { field: "alocacao", label: "Alocação" },
           { field: "nome", label: "Nome" },
-          { field: "cpf_corrigido", label: "CPF" },
+          { field: "cpf_corrigido", label: "CPF Corrigido" },
+          { field: "check_po", label: "Check PO" },
+          { field: "criterio", label: "Critério" },
+          { field: "motivo_impedimento", label: "Motivo Impedimento" },
         ]}
         filterValues={filters}
         onFilterChange={(f, v) => { setFilters((p) => ({ ...p, [f]: v })); setPage(1); }}
@@ -65,14 +67,17 @@ export default function PrioritariosPage({ standalone = false }: { standalone?: 
         onSortChange={(f, d) => { setSortField(f); setSortDir(d); }}
         onClear={() => { setSearch(""); setFilters({}); setPage(1); }}
         onRowClick={(p) => setSelected(p)}
-        onNew={canEdit ? () => { setEditing(null); setFormOpen(true); } : undefined}
-        newLabel="Novo Prioritário"
         rowKey={(p) => p.id}
         columns={[
-          { header: "CPF", sortField: "cpf_corrigido", cell: (p) => <span className="font-mono text-xs">{p.cpf_corrigido ? maskCpf(p.cpf_corrigido) : "-"}</span> },
-          { header: "Nome", sortField: "nome", cell: (p) => <span className="font-medium">{p.nome ?? "-"}</span> },
-          { header: "Observação", cell: (p) => <span className="text-xs">{p.observacao ?? "-"}</span> },
-          { header: "Cadastrado", sortField: "created_at", cell: (p) => new Date(p.created_at).toLocaleDateString("pt-BR") },
+          { header: "Controle", sortField: "controle", className: "text-xs", cell: (p) => cell(p.controle) },
+          { header: "Tranche", sortField: "tranche", className: "text-xs", cell: (p) => cell(p.tranche) },
+          { header: "Identificação", sortField: "identificacao", className: "text-xs", cell: (p) => cell(p.identificacao) },
+          { header: "Alocação", sortField: "alocacao", className: "text-xs", cell: (p) => cell(p.alocacao) },
+          { header: "Nome", sortField: "nome", className: "text-xs", cell: (p) => <span className="text-xs font-medium">{p.nome ?? "-"}</span> },
+          { header: "CPF Corrigido", sortField: "cpf_corrigido", className: "text-xs", cell: (p) => <span className="font-mono text-xs">{p.cpf_corrigido ? maskCpf(p.cpf_corrigido) : "-"}</span> },
+          { header: "Check PO", sortField: "check_po", className: "text-xs", cell: (p) => p.check_po ? <Badge variant="outline" className="text-xs">{p.check_po}</Badge> : <span className="text-xs">-</span> },
+          { header: "Critério", sortField: "criterio", className: "text-xs", cell: (p) => cell(p.criterio) },
+          { header: "Motivo Impedimento", sortField: "motivo_impedimento", className: "text-xs", cell: (p) => cell(p.motivo_impedimento) },
         ]}
       />
 
@@ -81,53 +86,22 @@ export default function PrioritariosPage({ standalone = false }: { standalone?: 
         onOpenChange={(v) => !v && setSelected(null)}
         title={selected?.nome ?? "Prioritário"}
         subtitle={selected?.cpf_corrigido ? maskCpf(selected.cpf_corrigido) : ""}
-        canEdit={canEdit}
-        canDelete={canEdit}
-        onEdit={() => { if (selected) { setEditing(selected); setFormOpen(true); setSelected(null); } }}
-        onDelete={() => { if (selected) { setDeleteId(selected.id); setSelected(null); } }}
+        canEdit={false}
+        canDelete={false}
         fields={selected ? [
+          { label: "Controle", value: selected.controle ?? null },
+          { label: "Tranche", value: selected.tranche ?? null },
+          { label: "Identificação", value: selected.identificacao ?? null },
+          { label: "Alocação", value: selected.alocacao ?? null },
           { label: "Nome", value: selected.nome },
-          { label: "CPF", value: selected.cpf_corrigido ? maskCpf(selected.cpf_corrigido) : null },
+          { label: "CPF Corrigido", value: selected.cpf_corrigido ? maskCpf(selected.cpf_corrigido) : null },
+          { label: "Check PO", value: selected.check_po ?? null },
+          { label: "Critério", value: selected.criterio ?? null },
+          { label: "Motivo Impedimento", value: selected.motivo_impedimento ?? null, full: true },
           { label: "Observação", value: selected.observacao, full: true },
           { label: "Cadastrado", value: new Date(selected.created_at).toLocaleString("pt-BR") },
         ] : []}
       />
-
-      <EntityFormDialog<PrioritarioFormData>
-        open={formOpen}
-        onOpenChange={(v) => { setFormOpen(v); if (!v) setEditing(null); }}
-        title={editing ? "Editar Prioritário" : "Novo Prioritário"}
-        schema={prioritarioSchema}
-        defaultValues={{
-          nome: editing?.nome ?? "",
-          cpf_corrigido: editing?.cpf_corrigido ?? "",
-          observacao: editing?.observacao ?? "",
-          endereco: "",
-        }}
-        fields={[
-          { name: "nome", label: "Nome" },
-          { name: "cpf_corrigido", label: "CPF", placeholder: "000.000.000-00" },
-          { name: "observacao", label: "Observação", type: "textarea" },
-          { name: "endereco", label: "Endereço" },
-        ]}
-        onSubmit={submit}
-        submitting={create.isPending || update.isPending}
-      />
-
-      <AlertDialog open={deleteId !== null} onOpenChange={(v) => !v && setDeleteId(null)}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Excluir prioritário?</AlertDialogTitle>
-            <AlertDialogDescription>Esta ação é permanente.</AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancelar</AlertDialogCancel>
-            <AlertDialogAction
-              onClick={async () => { if (deleteId) { await remove.mutateAsync(deleteId); setDeleteId(null); } }}
-            >Excluir</AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
     </>
   );
 }
