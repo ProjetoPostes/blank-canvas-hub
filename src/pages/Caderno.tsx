@@ -85,7 +85,7 @@ type FormData = z.infer<typeof formSchema>;
 const ITEMS_PER_PAGE = 150;
 
 export default function Caderno() {
-  const { data, isLoading, updateCaderno, bulkUpdateCaderno, isBulkUpdating } = useCaderno(1000);
+  const { data, isLoading, updateCaderno, bulkUpdateCaderno, isBulkUpdating } = useCaderno();
   const { canEdit, isAdmin, isOperadorChefe } = useUserRole();
   const canEditPrioridade = isAdmin || isOperadorChefe;
   const [search, setSearch] = useState("");
