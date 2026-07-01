@@ -427,7 +427,7 @@ export default function Caderno() {
           </DialogHeader>
           <ScrollArea className="max-h-[calc(85vh-120px)] pr-4">
             <Form {...form}>
-              <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 py-4">
+              <form onSubmit={form.handleSubmit(onSubmit, (errs) => { console.error("Caderno form validation errors", errs); toast.error("Verifique os campos do formulário"); })} className="space-y-4 py-4">
                 {/* Informações da OS (somente leitura) */}
                 <Card>
                   <CardHeader className="pb-2">
