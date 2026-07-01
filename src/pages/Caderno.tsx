@@ -420,28 +420,43 @@ export default function Caderno() {
         </Card>
 
       <Dialog open={editDrawerOpen} onOpenChange={setEditDrawerOpen}>
-        <DialogContent className="max-w-2xl max-h-[85vh]">
+        <DialogContent className="max-w-3xl max-h-[85vh]">
           <DialogHeader>
-            <DialogTitle>{canEdit ? "Editar Caderno" : "Visualizar Caderno"}</DialogTitle>
-            <DialogDescription>{canEdit ? "Campos editáveis destacados abaixo" : "Visualize as informações (somente leitura)"}</DialogDescription>
+            <DialogTitle>{canEdit ? "Editar OS" : "Visualizar OS"}</DialogTitle>
+            <DialogDescription>{canEdit ? "Informações da OS. Campos editáveis destacados abaixo." : "Visualize as informações (somente leitura)"}</DialogDescription>
           </DialogHeader>
           <ScrollArea className="max-h-[calc(85vh-120px)] pr-4">
             <Form {...form}>
               <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 py-4">
-                {/* Read-only fields */}
-                <div className="grid grid-cols-2 gap-4">
-                  <FormField control={form.control} name="numos" render={({ field }) => (<FormItem><FormLabel>NUMOS</FormLabel><FormControl><Input {...field} disabled /></FormControl></FormItem>)} />
-                  <FormField control={form.control} name="numobra" render={({ field }) => (<FormItem><FormLabel>NUMOBRA</FormLabel><FormControl><Input {...field} value={field.value ?? ""} disabled /></FormControl></FormItem>)} />
-                </div>
-                <div className="grid grid-cols-2 gap-4">
-                  <FormField control={form.control} name="status" render={({ field }) => (<FormItem><FormLabel>Status</FormLabel><FormControl><Input {...field} value={field.value ?? ""} disabled /></FormControl></FormItem>)} />
-                  <FormField control={form.control} name="controle_os" render={({ field }) => (<FormItem><FormLabel>Controle OS</FormLabel><FormControl><Input {...field} value={field.value ?? ""} disabled /></FormControl></FormItem>)} />
-                </div>
-                <FormField control={form.control} name="nomecli" render={({ field }) => (<FormItem><FormLabel>Nome Cliente</FormLabel><FormControl><Input {...field} value={field.value ?? ""} disabled /></FormControl></FormItem>)} />
-                <div className="grid grid-cols-2 gap-4">
-                  <FormField control={form.control} name="regional" render={({ field }) => (<FormItem><FormLabel>Regional</FormLabel><FormControl><Input {...field} value={field.value ?? ""} disabled /></FormControl></FormItem>)} />
-                  <FormField control={form.control} name="nomelcd" render={({ field }) => (<FormItem><FormLabel>LCD</FormLabel><FormControl><Input {...field} value={field.value ?? ""} disabled /></FormControl></FormItem>)} />
-                </div>
+                {/* Informações da OS (somente leitura) */}
+                <Card>
+                  <CardHeader className="pb-2">
+                    <CardTitle className="text-sm font-medium">Informações da OS</CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-3">
+                    <div className="grid grid-cols-3 gap-3">
+                      <FormField control={form.control} name="numos" render={({ field }) => (<FormItem><FormLabel>NUMOS</FormLabel><FormControl><Input {...field} disabled /></FormControl></FormItem>)} />
+                      <FormField control={form.control} name="numobra" render={({ field }) => (<FormItem><FormLabel>NUMOBRA</FormLabel><FormControl><Input {...field} value={field.value ?? ""} disabled /></FormControl></FormItem>)} />
+                      <FormField control={form.control} name="status" render={({ field }) => (<FormItem><FormLabel>Status</FormLabel><FormControl><Input {...field} value={field.value ?? ""} disabled /></FormControl></FormItem>)} />
+                    </div>
+                    <div className="grid grid-cols-3 gap-3">
+                      <FormField control={form.control} name="nomelcd" render={({ field }) => (<FormItem><FormLabel>Nome LCD</FormLabel><FormControl><Input {...field} value={field.value ?? ""} disabled /></FormControl></FormItem>)} />
+                      <FormField control={form.control} name="regional" render={({ field }) => (<FormItem><FormLabel>Regional</FormLabel><FormControl><Input {...field} value={field.value ?? ""} disabled /></FormControl></FormItem>)} />
+                      <FormField control={form.control} name="controle_os" render={({ field }) => (<FormItem><FormLabel>Controle OS</FormLabel><FormControl><Input {...field} value={field.value ?? ""} disabled /></FormControl></FormItem>)} />
+                    </div>
+                    <div className="grid grid-cols-2 gap-3">
+                      <FormField control={form.control} name="nomecli" render={({ field }) => (<FormItem><FormLabel>Nome Cliente</FormLabel><FormControl><Input {...field} value={field.value ?? ""} disabled /></FormControl></FormItem>)} />
+                      <FormField control={form.control} name="numcpf" render={({ field }) => (<FormItem><FormLabel>CPF</FormLabel><FormControl><Input value={maskCpf(field.value) ?? ""} disabled /></FormControl></FormItem>)} />
+                    </div>
+                    <div className="grid grid-cols-3 gap-3">
+                      <FormField control={form.control} name="dth_nascimento" render={({ field }) => (<FormItem><FormLabel>Dt. Nascimento</FormLabel><FormControl><Input {...field} value={field.value ?? ""} disabled /></FormControl></FormItem>)} />
+                      <FormField control={form.control} name="numtel" render={({ field }) => (<FormItem><FormLabel>Telefone</FormLabel><FormControl><Input {...field} value={field.value ?? ""} disabled /></FormControl></FormItem>)} />
+                      <FormField control={form.control} name="email" render={({ field }) => (<FormItem><FormLabel>Email</FormLabel><FormControl><Input {...field} value={field.value ?? ""} disabled /></FormControl></FormItem>)} />
+                    </div>
+                    <FormField control={form.control} name="dsclgr_os" render={({ field }) => (<FormItem><FormLabel>Logradouro</FormLabel><FormControl><Input {...field} value={field.value ?? ""} disabled /></FormControl></FormItem>)} />
+                    <FormField control={form.control} name="complemento" render={({ field }) => (<FormItem><FormLabel>Complemento</FormLabel><FormControl><Input {...field} value={field.value ?? ""} disabled /></FormControl></FormItem>)} />
+                  </CardContent>
+                </Card>
 
                 {/* Editable fields */}
                 {canEdit && (
@@ -451,13 +466,52 @@ export default function Caderno() {
                     </CardHeader>
                     <CardContent className="space-y-4">
                       <FormField control={form.control} name="motivo_improcedencia" render={({ field }) => (<FormItem><FormLabel>Motivo Improcedência</FormLabel><FormControl><Textarea {...field} value={field.value ?? ""} /></FormControl></FormItem>)} />
-                      <FormField control={form.control} name="criterio" render={({ field }) => (<FormItem><FormLabel>Critério</FormLabel><Select onValueChange={field.onChange} defaultValue={field.value}><FormControl> <SelectTrigger><SelectValue placeholder="Selecione um critério" /> </SelectTrigger> </FormControl> <SelectContent>  {criterios.map((item) => ( <SelectItem  key={item} value={item} > {item}</SelectItem>))}</SelectContent></Select></FormItem>)} />
-                      <FormField control={form.control} name="tipo_carta_enviada" render={({ field }) => (<FormItem><FormLabel>Tipo Carta</FormLabel><FormControl><Input {...field} value={field.value ?? ""} /></FormControl></FormItem>)} />
-                      <FormField control={form.control} name="base_5311" render={({ field }) => (<FormItem><FormLabel>Base 5311</FormLabel><FormControl><Input {...field} value={field.value ?? ""} /></FormControl></FormItem>)} />
-                      <FormField control={form.control} name="tranche" render={({ field }) => (<FormItem><FormLabel>Tranche</FormLabel><FormControl><Input {...field} value={field.value ?? ""} /></FormControl></FormItem>)} />
-                      <FormField control={form.control} name="responsavel" render={({ field }) => (<FormItem><FormLabel>Responsável</FormLabel><FormControl><Input {...field} value={field.value ?? ""} /></FormControl></FormItem>)} />
+                      <div className="grid grid-cols-2 gap-3">
+                        <FormField control={form.control} name="criterio" render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Critério</FormLabel>
+                            <Select onValueChange={field.onChange} value={field.value ?? undefined}>
+                              <FormControl><SelectTrigger><SelectValue placeholder="Selecione um critério" /></SelectTrigger></FormControl>
+                              <SelectContent>
+                                {criterios.map((item) => (<SelectItem key={item} value={item}>{item}</SelectItem>))}
+                              </SelectContent>
+                            </Select>
+                          </FormItem>
+                        )} />
+                        <FormField control={form.control} name="tipo_carta_enviada" render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Tipo Carta Enviada</FormLabel>
+                            <Select onValueChange={field.onChange} value={field.value ?? undefined}>
+                              <FormControl><SelectTrigger><SelectValue placeholder="Selecione o tipo" /></SelectTrigger></FormControl>
+                              <SelectContent>
+                                {tiposCartaOptions.map((item) => (<SelectItem key={item} value={item}>{item}</SelectItem>))}
+                              </SelectContent>
+                            </Select>
+                          </FormItem>
+                        )} />
+                      </div>
+                      <div className="grid grid-cols-2 gap-3">
+                        <FormField control={form.control} name="responsavel" render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Responsável</FormLabel>
+                            <Select onValueChange={field.onChange} value={field.value ?? undefined}>
+                              <FormControl><SelectTrigger><SelectValue placeholder="Selecione o responsável" /></SelectTrigger></FormControl>
+                              <SelectContent>
+                                {responsaveis.length === 0 ? (
+                                  <SelectItem value="__none__" disabled>Nenhum responsável cadastrado</SelectItem>
+                                ) : responsaveis.map((item) => (<SelectItem key={item} value={item}>{item}</SelectItem>))}
+                              </SelectContent>
+                            </Select>
+                          </FormItem>
+                        )} />
+                        <FormField control={form.control} name="empreiteira" render={({ field }) => (<FormItem><FormLabel>Empreiteira</FormLabel><FormControl><Input {...field} value={field.value ?? ""} /></FormControl></FormItem>)} />
+                      </div>
+                      <div className="grid grid-cols-3 gap-3">
+                        <FormField control={form.control} name="base_5311" render={({ field }) => (<FormItem><FormLabel>Base 5311</FormLabel><FormControl><Input {...field} value={field.value ?? ""} /></FormControl></FormItem>)} />
+                        <FormField control={form.control} name="tranche" render={({ field }) => (<FormItem><FormLabel>Tranche</FormLabel><FormControl><Input {...field} value={field.value ?? ""} /></FormControl></FormItem>)} />
+                        <FormField control={form.control} name="data_carta" render={({ field }) => (<FormItem><FormLabel>Data Carta</FormLabel><FormControl><Input type="date" {...field} value={field.value ?? ""} /></FormControl></FormItem>)} />
+                      </div>
                       <FormField control={form.control} name="observacao" render={({ field }) => (<FormItem><FormLabel>Observação</FormLabel><FormControl><Textarea {...field} value={field.value ?? ""} /></FormControl></FormItem>)} />
-                      <FormField control={form.control} name="data_carta" render={({ field }) => (<FormItem><FormLabel>Data Carta</FormLabel><FormControl><Input type="date" {...field} value={field.value ?? ""} /></FormControl></FormItem>)} />
                       {canEditPrioridade && (
                         <FormField control={form.control} name="prioridade" render={({ field }) => (<FormItem><FormLabel>Prioridade (Admin/Chefe)</FormLabel><FormControl><Input {...field} value={field.value ?? ""} /></FormControl></FormItem>)} />
                       )}
@@ -476,6 +530,7 @@ export default function Caderno() {
           </ScrollArea>
         </DialogContent>
       </Dialog>
+
       
       <EnviarOsObrasDialog open={enviarDialogOpen} onOpenChange={setEnviarDialogOpen} selectedItems={selectedItems} onClearSelection={clearSelection} />
       
