@@ -69,7 +69,7 @@ async function upsertLocalidade(
   return (data as { id_loc: number } | null)?.id_loc ?? null;
 }
 
-export function useCaderno(limit = 1000) {
+export function useCaderno() {
   const queryClient = useQueryClient();
 
   const { data, isLoading, error } = useQuery({
